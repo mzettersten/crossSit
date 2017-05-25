@@ -1,0 +1,176 @@
+---
+title: "The company referents keep: Learning multiple kinds of associations during cross-situational word learning"
+output: html_document
+---
+
+**(Zettersten, Wojcik, Benitez, & Saffran (2017)**
+
+This is a walkthrough of the main analyses reported in the manuscript.
+
+**Setting up the workspace and loading the data**
+
+Load required R packages.
+
+```{r}
+#load required R packages
+source("summarizeData.R") #script for summarizing data, courtesy of "R cookbook" (http://www.cookbook-r.com/)
+library(utils)
+library(plyr)
+library(lme4)
+library(stats)
+
+```
+
+Load in the full experimental dataset.
+
+```{r}
+d = read.table("CrossSit.txt",sep="\t", header=TRUE)
+```
+
+
+##Experiment 1
+
+First, subset the data to the data for Experiment 1.
+
+```{r}
+exp1D = subset(d, expName=="exp1")
+```
+
+**Word Learning Model**
+
+```{r}
+#word learning model
+mLearn_exp1=glmer(isRight~offset(logit(offset.25))+orderByTargetRoleC+(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC|targetRole),data=subset(exp1D, trialKind=="training"),family=binomial, control=glmerControl(optimizer="bobyqa"))
+summary(mLearn_exp1)
+#compute Wald 95% CIs
+confint(mLearn_exp1,method="Wald")[7:8,]
+```
+
+**Object Association Memory**
+
+```{r}
+# object-object association memory model
+mMemory_exp1=glmer(isRight~offset(logit(offset.33))+(1|ResponseID)+(1|pairKind),data=subset(exp1D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
+summary(mMemory_exp1)
+confint(mMemory_exp1,method="Wald")[3,]
+```
+
+
+**Analyze object-object memory vs. word learning tradeoff**
+
+```{r}
+mTradeoff_exp1=glmer(isRight~offset(logit(offset.25))+memAccExemplarTrialC+(1+memAccExemplarTrialC|ResponseID)+(1+memAccExemplarTrialC|targetRole), data=subset(exp1D,trialKind=="training"),family=binomial,control=glmerControl(optimizer="bobyqa"))
+summary(mTradeoff_exp1)
+confint(mTradeoff_exp1,method="Wald")[7:8,]
+```
+
+##Experiment 2
+
+Subset the data to the data for Experiment 2.
+
+```{r}
+exp2D = subset(d, expName=="exp2")
+```
+
+**Word Learning Model**
+
+```{r}
+#Word Learning Model
+mLearn_exp2=glmer(isRight~offset(logit(offset.25))+orderByTargetRoleC+(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC|targetRole),data=subset(exp2D, trialKind=="training"),family=binomial, control=glmerControl(optimizer="bobyqa"))
+summary(mLearn_exp2)
+#compute Wald 95% CIs
+confint(mLearn_exp2,method="Wald")[7:8,]
+```
+
+**Compare Word Learning Experiment 1 & 2**
+
+``` {r}
+#Compare Experiment 1 & 2
+mLearn_exp12=glmer(isRight~offset(logit(offset.25))+distributionC*orderByTargetRoleC+(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC:distributionC|targetRole),data=subset(d, trialKind=="training"&(expName=="exp1"|expName=="exp2")),family=binomial,control=glmerControl(optimizer="bobyqa"))
+summary(mLearn_exp12)
+confint(mLearn_exp12,method="Wald")[7:10,]
+#note: the model including full by-item random effects structure did not converge, so we fit the model including only the random slope for the interaction, following Barr (2013)
+```
+
+**Object Association Memory Model**
+
+```{r}
+# object-object association memory model
+mMemory_exp2=glmer(isRight~offset(logit(offset.33))+(1|ResponseID)+(1|pairKind),data=subset(exp2D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
+summary(mMemory_exp2)
+confint(mMemory_exp2,method="Wald")[3,]
+```
+
+**Compare Experiment 1 and Experiment 2 Association Memory Accuracy**
+
+```{r}
+#Compare Experiment 1 & 2
+mMemory_exp12=glmer(isRight~offset(logit(offset.33))+distributionC+(1|ResponseID)+(1+distributionC|pairKind),data=subset(d, trialKind=="test"&(expName=="exp1"|expName=="exp2")),family=binomial,control = glmerControl(optimizer="bobyqa"))
+summary(mMemory_exp12)
+confint(mMemory_exp12,method="Wald")[5:6,]
+```
+
+**Analyze object-object association memory vs. word learning tradeoff**
+
+```{r}
+mTradeoff_exp2=glmer(isRight~offset(logit(offset.25))+memAccExemplarTrialC+(1+memAccExemplarTrialC|ResponseID)+(1+memAccExemplarTrialC|targetRole), data=subset(exp2D,trialKind=="training"),family=binomial,control=glmerControl(optimizer="bobyqa"))
+summary(mTradeoff_exp2)
+confint(mTradeoff_exp2,method="Wald")[7:8,]
+```
+
+**Compare Tradeoffs for Experiment 1 and Experiment 2**
+
+```{r}
+mTradeoff_exp12=glmer(isRight~offset(logit(offset.25))+distributionC*memAccExemplarTrialC+(1+memAccExemplarTrialC|ResponseID)+(1+memAccExemplarTrialC*distributionC|targetRole), data=subset(d, trialKind=="training"&(expName=="exp1"|expName=="exp2")),family=binomial,control=glmerControl(optimizer="bobyqa"))
+summary(mTradeoff_exp12)
+confint(mTradeoff_exp12,method="Wald")[14:17,]
+```
+
+##Experiment 3
+
+Subset the data to the data for Experiment 3.
+
+```{r}
+exp3D = subset(d, expName=="exp3_uniform"|expName=="exp3_skewed")
+```
+
+**Word Learning Model**
+
+```{r}
+#Word Learning Model
+mLearn_exp3=glmer(isRight~offset(logit(offset.25))+distributionC*orderByTargetRoleC+(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC*distributionC|targetRole),data=subset(exp3D, trialKind=="training"),family=binomial, control=glmerControl(optimizer="bobyqa"))
+summary(mLearn_exp3)
+#compute Wald 95% CIs
+confint(mLearn_exp3,method="Wald")[14:17,]
+```
+
+**Object-Object Association memory model**
+
+```{r}
+# object-object association memory model
+mMemory_exp3=glmer(isRight~offset(logit(offset.33))+distributionC+(1|ResponseID)+(1+distributionC|pairKind),data=subset(exp3D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
+summary(mMemory_exp3)
+confint(mMemory_exp3,method="Wald")[5:6,]
+
+#recode to test skewed condition against chance
+exp3D$distributionSkewed = varRecode(exp3D$distributionC,c(-0.5,0.5),c(-1,0))
+mMemory_exp3Skewed=glmer(isRight~offset(logit(offset.33))+distributionSkewed+(1|ResponseID)+(1+distributionSkewed|pairKind),data=subset(exp3D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
+summary(mMemory_exp3Skewed)
+confint(mMemory_exp3Skewed,method="Wald")[5:6,]
+
+#recode to test uniform condition against chance
+exp3D$distributionUniform = varRecode(exp3D$distributionC,c(-0.5,0.5),c(0,1))
+mMemory_exp3Uniform=glmer(isRight~offset(logit(offset.33))+distributionUniform+(1|ResponseID)+(1+distributionUniform|pairKind),data=subset(exp3D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
+summary(mMemory_exp3Uniform)
+confint(mMemory_exp3Uniform,method="Wald")[5:6,]
+```
+
+
+**Analyze object-object memory vs. word learning tradeoff**
+
+```{r}
+##analyze object-object memory vs. word learning tradeoff##
+mTradeoff_exp3=glmer(isRight~offset(logit(offset.25))+distributionC*memAccExemplarTrialC+(1+memAccExemplarTrialC|ResponseID)+(1+distributionC*memAccExemplarTrialC|targetRole), data=subset(exp3D,trialKind=="training"),family=binomial,control=glmerControl(optimizer="bobyqa"))
+summary(mTradeoff_exp3)
+confint(mTradeoff_exp3,method="Wald")[14:17,]
+```
