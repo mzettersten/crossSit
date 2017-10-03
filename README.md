@@ -9,6 +9,7 @@ The folder data contains the following documents
 - **CrossSit_analyses.R**: An R script documenting all analyses included in the manuscript
 - **CrossSit_analyses.Rmd**: An R markdown file documenting the central models reported in the manuscript
 - **CrossSit_analyses.html**: The R markdown file exported as an html (if you only want to inspect the models and their summary outputs rather than reproduce the analyses in R)
+- **CrossSit_analyses_randomEffectsExploration.R**: A supplementary analysis file to illustrate the robustness of the results under different random effect structures
 - **CrossSit_codebook.docx**: A codebook for the dataset "CrossSit.txt"
 - **summarizeData.R**: An R script including help functions to summarize data
 
