@@ -6,14 +6,15 @@
 
 #Load R packages/ custom scripts
 source("summarizeData.R") #script for summarizing data, courtesy of "R cookbook" (http://www.cookbook-r.com/)
-library(utils)
-library(plyr)
-library(ggplot2) #for plotting
-library(lme4)
-library(stats)
-library(cowplot)
-library(AICcmodavg)
-library(reshape2)
+library(utils) #version 3.3.1
+library(plyr) #version 1.8.4
+library(ggplot2) #version 2.2.1
+library(lme4) #version 1.1-13
+library(stats) #version 3.3.1
+library(cowplot) #version 0.8.0
+library(AICcmodavg) #version 2.1-1
+library(reshape2) #version 1.4.2
+library(gtools) #version 3.5.0
 
 #Read in data
 d = read.table("CrossSit.txt",sep="\t", header=TRUE)
@@ -63,7 +64,9 @@ summary(mMemory_exp1)
 confint(mMemory_exp1,method="Wald")
 
 #Test moderate vs. high co-occurrence pairs (by-item effect grouped by paired objects)
-exp1D$cooccurPairTypeC = varRecode(as.character(exp1D$cooccurPairType),c("moderate","high"),c(-0.5,0.5))
+#exp1D$cooccurPairTypeC = varRecode(as.character(exp1D$cooccurPairType),c("moderate","high"),c(-0.5,0.5))
+exp1D$cooccurPairTypeC = ifelse(as.character(exp1D$cooccurPairType)=="moderate",-0.5,
+                                ifelse(as.character(exp1D$cooccurPairType)=="high",0.5,NA))
 mMemoryPairs_exp1=glmer(isRight~offset(logit(offset.33))+cooccurPairTypeC+(1+cooccurPairTypeC|ResponseID)+(1|pairKind),data=subset(exp1D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mMemoryPairs_exp1)
 #Check: identical results when fitting the model with by-item effects grouped by individual objects rather than pairs
@@ -190,12 +193,14 @@ summary(mMemory_exp3)
 confint(mMemory_exp3,method="Wald")
 
 #recode to test skewed condition against chance
-exp3D$distributionSkewed = varRecode(exp3D$distributionC,c(-0.5,0.5),c(-1,0))
+exp3D$distributionSkewed = ifelse(exp3D$distributionC==-0.5,-1,
+                                  ifelse(exp3D$distributionC==0.5,0,NA))
 mMemory_exp3Skewed=glmer(isRight~offset(logit(offset.33))+distributionSkewed+(1|ResponseID)+(1+distributionSkewed|pairKind),data=subset(exp3D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mMemory_exp3Skewed)
 confint(mMemory_exp3Skewed,method="Wald")
-#recode to test skewed condition against chance
-exp3D$distributionUniform = varRecode(exp3D$distributionC,c(-0.5,0.5),c(0,1))
+#recode to test uniform condition against chance
+exp3D$distributionUniform = ifelse(exp3D$distributionC==-0.5,0,
+                                   ifelse(exp3D$distributionC==0.5,1,NA))
 mMemory_exp3Uniform=glmer(isRight~offset(logit(offset.33))+distributionUniform+(1|ResponseID)+(1+distributionUniform|pairKind),data=subset(exp3D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mMemory_exp3Uniform)
 confint(mMemory_exp3Uniform,method="Wald")
@@ -205,13 +210,13 @@ mMemory_exp3=glmer(isRight~offset(logit(offset.33))+distributionC+(1|ResponseID)
 summary(mMemory_exp3)
 confint(mMemory_exp3,method="Wald")
 
-#recode to test skewed condition against chance
-exp3D$distributionSkewed = varRecode(exp3D$distributionC,c(-0.5,0.5),c(-1,0))
-mMemory_exp3Skewed=glmer(isRight~offset(logit(offset.33))+distributionSkewed+(1|ResponseID)+(1+distributionSkewed|exemplar),data=subset(exp3D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
+#test skewed condition against chance
+##model with full random effects-structure does not converge, so we remove the by-item random slope to allow the model to converge
+#mMemory_exp3Skewed=glmer(isRight~offset(logit(offset.33))+distributionSkewed+(1|ResponseID)+(1+distributionSkewed|exemplar),data=subset(exp3D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
+mMemory_exp3Skewed=glmer(isRight~offset(logit(offset.33))+distributionSkewed+(1|ResponseID)+(1|exemplar),data=subset(exp3D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mMemory_exp3Skewed)
 confint(mMemory_exp3Skewed,method="Wald")
-#recode to test skewed condition against chance
-exp3D$distributionUniform = varRecode(exp3D$distributionC,c(-0.5,0.5),c(0,1))
+#test uniform condition against chance
 mMemory_exp3Uniform=glmer(isRight~offset(logit(offset.33))+distributionUniform+(1|ResponseID)+(1+distributionUniform|exemplar),data=subset(exp3D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mMemory_exp3Uniform)
 confint(mMemory_exp3Uniform,method="Wald")
@@ -392,7 +397,6 @@ Mem_123
 ####Learning Memory Tradeoff Exp 1,2,3####
 
 pX=expand.grid(memAccExemplarTrialC=c(-0.5,0.5),distributionC=c(-0.5,0.5),offset.25=c(0.25))
-pX$expNameC=as.factor(pX$expNameC)
 pX$ResponseID=NA
 pX$TargetRole=NA
 pY1 <- as.data.frame(predictSE.merMod(mTradeoff_exp12,newdata=pX)) #Predictions for Experiments 1 & 2
