@@ -3,7 +3,7 @@ title: "The company referents keep: Learning multiple kinds of associations duri
 output: html_document
 ---
 
-**(Zettersten, Wojcik, Benitez, & Saffran (2017)**
+**Zettersten, Wojcik, Benitez, & Saffran (2017)**
 
 This is a walkthrough of the main analyses reported in the manuscript.
 
@@ -11,13 +11,18 @@ This is a walkthrough of the main analyses reported in the manuscript.
 
 Load required R packages.
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 #load required R packages
 source("summarizeData.R") #script for summarizing data, courtesy of "R cookbook" (http://www.cookbook-r.com/)
-library(utils)
-library(plyr)
-library(lme4)
-library(stats)
+library(utils) #version 3.3.1
+library(plyr) #version 1.8.4
+library(ggplot2) #version 2.2.1
+library(lme4) #version 1.1-14
+library(stats) #version 3.3.1
+library(cowplot) #version 0.8.0
+library(AICcmodavg) #version 2.1-1
+library(reshape2) #version 1.4.2
+library(gtools) #version 3.5.0
 
 ```
 
@@ -121,9 +126,10 @@ confint(mTradeoff_exp2,method="Wald")[7:8,]
 **Compare Tradeoffs for Experiment 1 and Experiment 2**
 
 ```{r}
-mTradeoff_exp12=glmer(isRight~offset(logit(offset.25))+distributionC*memAccExemplarTrialC+(1+memAccExemplarTrialC|ResponseID)+(1+memAccExemplarTrialC*distributionC|targetRole), data=subset(d, trialKind=="training"&(expName=="exp1"|expName=="exp2")),family=binomial,control=glmerControl(optimizer="bobyqa"))
+mTradeoff_exp12=glmer(isRight~offset(logit(offset.25))+distributionC*memAccExemplarTrialC+(1+memAccExemplarTrialC|ResponseID)+(1+memAccExemplarTrialC:distributionC|targetRole), data=subset(d, trialKind=="training"&(expName=="exp1"|expName=="exp2")),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mTradeoff_exp12)
-confint(mTradeoff_exp12,method="Wald")[14:17,]
+confint(mTradeoff_exp12,method="Wald")[7:10,]
+#note: the model including full by-item random effects structure did not converge, so we fit the model including only the random slope for the interaction, following Barr (2013)
 ```
 
 ##Experiment 3
@@ -138,10 +144,11 @@ exp3D = subset(d, expName=="exp3_uniform"|expName=="exp3_skewed")
 
 ```{r}
 #Word Learning Model
-mLearn_exp3=glmer(isRight~offset(logit(offset.25))+distributionC*orderByTargetRoleC+(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC*distributionC|targetRole),data=subset(exp3D, trialKind=="training"),family=binomial, control=glmerControl(optimizer="bobyqa"))
+mLearn_exp3=glmer(isRight~offset(logit(offset.25))+distributionC*orderByTargetRoleC+(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC:distributionC|targetRole),data=subset(exp3D, trialKind=="training"),family=binomial, control=glmerControl(optimizer="bobyqa"))
 summary(mLearn_exp3)
 #compute Wald 95% CIs
-confint(mLearn_exp3,method="Wald")[14:17,]
+confint(mLearn_exp3,method="Wald")[7:10,]
+#note: the model including full by-item random effects structure did not converge, so we fit the model including only the random slope for the interaction, following Barr (2013)
 ```
 
 **Object-Object Association memory model**

@@ -10,7 +10,7 @@ source("summarizeData.R") #script for summarizing data, courtesy of "R cookbook"
 library(utils) #version 3.3.1
 library(plyr) #version 1.8.4
 library(ggplot2) #version 2.2.1
-library(lme4) #version 1.1-13
+library(lme4) #version 1.1-14
 library(stats) #version 3.3.1
 library(cowplot) #version 0.8.0
 library(AICcmodavg) #version 2.1-1
@@ -100,7 +100,7 @@ learn1=ggplot(learn_1,aes(randomEffectName,beta,fill=type,label=signifLabel))+
   theme_bw()+
   geom_hline(yintercept=0,linetype="dashed", size=1.2)+
   theme(axis.text.x  = element_text(angle=90,hjust=1, vjust=0.5,size=12), legend.position="none")+
-  ylim(0,0.26)+
+  ylim(0,0.3)+
   ggtitle("Word Learning Slope: Experiment 1")
 learn1
 ##Experiment 2 Word Learning####
@@ -128,60 +128,66 @@ learn2=ggplot(learn_2,aes(randomEffectName,beta,fill=type,label=signifLabel))+
   theme_bw()+
   geom_hline(yintercept=0,linetype="dashed", size=1.2)+
   theme(axis.text.x  = element_text(angle=90,hjust=1, vjust=0.5,size=12), legend.position="none")+
-  ylim(0,0.26)+
+  ylim(0,0.3)+
   ggtitle("Word Learning Slope: Experiment 2")
 learn2
 
 ####Experiment 3 Word Learning####
 #model from the manuscript
-mLearn_exp3=glmer(isRight~offset(logit(offset.25))+orderByTargetRoleC*distributionC+(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC*distributionC|targetRole),data=subset(exp3D, trialKind=="training"),family=binomial, control=glmerControl(optimizer="bobyqa"))
+mLearn_exp3=glmer(isRight~offset(logit(offset.25))+orderByTargetRoleC*distributionC+(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC:distributionC|targetRole),data=subset(exp3D, trialKind=="training"),family=binomial, control=glmerControl(optimizer="bobyqa"))
 summary(mLearn_exp3)
 
 #Fixed effects structure (constant)
 modelFormulaFixed="isRight~offset(logit(offset.25))+orderByTargetRoleC*distributionC+"
 #define different random effects and a list of their parameters
-randomEffects=c("(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC*distributionC|targetRole)",
+randomEffects=c("(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC:distributionC|targetRole)",
                 "(1|ResponseID)",
                 "(1+orderByTargetRoleC|ResponseID)",
                 "(1|targetRole)",
                 "(1+orderByTargetRoleC|targetRole)",
                 "(1+distributionC|targetRole)", 
+                "(1+orderByTargetRoleC+distributionC|targetRole)",
                 "(1+orderByTargetRoleC+orderByTargetRoleC:distributionC|targetRole)",
                 "(1+distributionC+orderByTargetRoleC:distributionC|targetRole)",
                 "(1+orderByTargetRoleC*distributionC|targetRole)",
                 "(1|ResponseID)+(1|targetRole)",
                 "(1|ResponseID)+(1+orderByTargetRoleC|targetRole)",
                 "(1|ResponseID)+(1+distributionC|targetRole)",
+                "(1|ResponseID)+(1+orderByTargetRoleC+distributionC|targetRole)",
                 "(1|ResponseID)+(1+orderByTargetRoleC+orderByTargetRoleC:distributionC|targetRole)",
                 "(1|ResponseID)+(1+distributionC+orderByTargetRoleC:distributionC|targetRole)",
                 "(1|ResponseID)+(1+orderByTargetRoleC*distributionC|targetRole)",
                 "(1+orderByTargetRoleC|ResponseID)+(1|targetRole)",
                 "(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC|targetRole)",
                 "(1+orderByTargetRoleC|ResponseID)+(1+distributionC|targetRole)",
+                "(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC+distributionC|targetRole)",
                 "(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC+orderByTargetRoleC:distributionC|targetRole)",
                 "(1+orderByTargetRoleC|ResponseID)+(1+distributionC+orderByTargetRoleC:distributionC|targetRole)"
                 )
-randomEffectsNames=c("(1+trial|participant)+\n(1+trial*condition|item)",
+randomEffectsNames=c("(1+trial|participant)+\n(1+trial:condition|item)",
                      "(1|participant)",
                      "(1+trial|participant)",
                      "(1|item)",
                      "(1+trial|item)",
                      "(1+condition|item)",
+                     "(1+trial+condition|item)",
                      "(1+trial+trial:condition|item)",
                      "(1+condition+trial:condition|item)",
                      "(1+trial*condition|item)",
                      "(1|participant)+\n(1|item)",
                      "(1|participant)+\n(1+trial|item)",
                      "(1|participant)+\n(1+condition|item)",
+                     "(1|participant)+\n(1+trial+condition|item)",
                      "(1|participant)+\n(1+trial+trial:condition|item)",
                      "(1|participant)+\n(1+condition+trial:condition|item)",
                      "(1|participant)+\n(1+trial*condition|item)",
                      "(1+trial|participant)+\n(1|item)",
                      "(1+trial|participant)+\n(1+trial|item)",
                      "(1+trial|participant)+\n(1+condition|item)",
+                     "(1+trial|participant)+\n(1+trial+condition|item)",
                      "(1+trial|participant)+\n(1+trial+trial:condition|item)",
                      "(1+trial|participant)+\n(1+condition+trial:condition|item)")
-parameterNumber=c(13,1,3,1,3,3,6,6,10,2,4,4,7,7,11,4,6,6,9,9)
+parameterNumber=c(6,1,3,1,3,3,6,6,6,10,2,4,4,7,7,7,11,4,6,6,9,9,9)
 #index of the effect in the model
 indexEffect=2
 #create a data frame for different effects
@@ -201,13 +207,13 @@ learn3=ggplot(learn_3,aes(randomEffectName,beta,fill=type,label=signifLabel))+
 learn3
 
 
-# first align the top-row plot (plot.iris) with the left-most plot of the
-# bottom row (plot.mpg)
+# first align
 plots <- align_plots(learn1, learn3, align = 'v', axis = 'l')
 # then build the bottom row
 top_row <- plot_grid(plots[[1]],learn2, align = 'h', labels=c("A","B"), rel_widths = c(1, 1.3))
 # then combine with the top row for final plot
 p=plot_grid(top_row,plots[[2]], ncol = 1, labels=c("","C"),rel_heights = c(1, 1.2))
+#quartz()
 p
 
 ####analyze object-object association memory####
@@ -454,40 +460,53 @@ tradeoff2
 
 #### Experiment 1 vs.2 Object-object memory vs. word learning tradeoff####
 #compare Exp 1 & Exp 2
-mTradeoff_exp12=glmer(isRight~offset(logit(offset.25))+distributionC*memAccExemplarTrialC+(1+memAccExemplarTrialC|ResponseID)+(1+memAccExemplarTrialC*distributionC|targetRole), data=subset(d, trialKind=="training"&(expName=="exp1"|expName=="exp2")),family=binomial,control=glmerControl(optimizer="bobyqa"))
+mTradeoff_exp12=glmer(isRight~offset(logit(offset.25))+distributionC*memAccExemplarTrialC+(1+memAccExemplarTrialC|ResponseID)+(1+memAccExemplarTrialC:distributionC|targetRole), data=subset(d, trialKind=="training"&(expName=="exp1"|expName=="exp2")),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mTradeoff_exp12)
 confint(mTradeoff_exp12,method="Wald")
 
 modelFormulaFixed="isRight~offset(logit(offset.25))+distributionC*memAccExemplarTrialC+"
-randomEffects=c("(1+memAccExemplarTrialC|ResponseID)+(1+distributionC*memAccExemplarTrialC|targetRole)",
+randomEffects=c("(1+memAccExemplarTrialC|ResponseID)+(1+distributionC:memAccExemplarTrialC|targetRole)",
                 "(1|ResponseID)",
                 "(1+memAccExemplarTrialC|ResponseID)",
                 "(1|targetRole)",
                 "(1+memAccExemplarTrialC|targetRole)",
                 "(1+distributionC|targetRole)",
+                "(1+memAccExemplarTrialC+distributionC:memAccExemplarTrialC|targetRole)",
+                "(1+distributionC+distributionC:memAccExemplarTrialC|targetRole)",
                 "(1+distributionC*memAccExemplarTrialC|targetRole)",
                 "(1|ResponseID)+(1|targetRole)",
                 "(1|ResponseID)+(1+memAccExemplarTrialC|targetRole)",
                 "(1|ResponseID)+(1+distributionC|targetRole)",
+                "(1|ResponseID)+(1+memAccExemplarTrialC+distributionC:memAccExemplarTrialC|targetRole)",
+                "(1|ResponseID)+(1+distributionC+distributionC:memAccExemplarTrialC|targetRole)",
                 "(1|ResponseID)+(1+distributionC*memAccExemplarTrialC|targetRole)",
                 "(1+memAccExemplarTrialC|ResponseID)+(1|targetRole)",
                 "(1+memAccExemplarTrialC|ResponseID)+(1+memAccExemplarTrialC|targetRole)",
-                "(1+memAccExemplarTrialC|ResponseID)+(1+distributionC|targetRole)")
-randomEffectNames=c("(1+memoryAccuracy|participant)+\n(1+experiment*memoryAccuracy|item)",
+                "(1+memAccExemplarTrialC|ResponseID)+(1+distributionC|targetRole)",
+                "(1+memAccExemplarTrialC|ResponseID)+(1+memAccExemplarTrialC+distributionC:memAccExemplarTrialC|targetRole)",
+                "(1+memAccExemplarTrialC|ResponseID)+(1+distributionC+distributionC:memAccExemplarTrialC|targetRole)"
+                )
+randomEffectNames=c("(1+memoryAccuracy|participant)+\n(1+experiment:memoryAccuracy|item)",
                     "(1|participant)",
                     "(1+memoryAccuracy|participant)",
                     "(1|item)",
-                    "(1+trial|item)",
+                    "(1+memoryAccuracy|item)",
                     "(1+experiment|item)",
-                    "(1+experiment*trial|item)",
+                    "(1+memoryAccuracy+\nexperiment:memoryAccuracy|item)",
+                    "(1+experiment+\nexperiment:memoryAccuracy|item)",
+                    "(1+experiment*memoryAccuracy|item)",
                     "(1|participant)+\n(1|item)",
                     "(1|participant)+\n(1+memoryAccuracy|item)",
                     "(1|participant)+\n(1+experiment|item)",
+                    "(1|participant)+\n(1+memoryAccuracy+\nmemoryAccuracy:experiment|item)",
+                    "(1|participant)+\n(1+experiment+\nmemoryAccuracy:experiment|item)",
                     "(1|participant)+\n(1+memoryAccuracy*experiment|item)",
                     "(1+memoryAccuracy|participant)+\n(1|item)",
                     "(1+memoryAccuracy|participant)+\n(1+memoryAccuracy|item)",
-                    "(1+memoryAccuracy|participant)+\n(1+experiment|item)")
-parameterNumber=c(13,1,3,1,3,3,10,2,4,4,11,4,6,6)
+                    "(1+memoryAccuracy|participant)+\n(1+experiment|item)",
+                    "(1+memoryAccuracy|participant)+\n(1+memoryAccuracy+\nmemoryAccuracy:experiment|item)",
+                    "(1+memoryAccuracy|participant)+\n(1+experiment+\nmemoryAccuracy:experiment|item)")
+parameterNumber=c(6,1,3,1,3,3,6,6,10,2,4,4,7,7,11,4,6,6,9,9)
 indexEffect=4
 tradeoff_12=exploreRandomEffects(subset(d,trialKind=="training"&(expName=="exp1"|expName=="exp2")),modelFormulaFixed,randomEffects,randomEffectNames,parameterNumber, indexEffect,labels=c("paper","alternative \nrandom effects structure"))
 tradeoff12=ggplot(tradeoff_12,aes(randomEffectName,beta,fill=type,label=signifLabel))+
@@ -503,7 +522,13 @@ tradeoff12=ggplot(tradeoff_12,aes(randomEffectName,beta,fill=type,label=signifLa
 tradeoff12
 
 
-p=plot_grid(tradeoff1,tradeoff2,tradeoff12,labels=c("A","B","C"),ncol=3)
+#p=plot_grid(tradeoff1,tradeoff2,tradeoff12,labels=c("A","B","C"),ncol=3)
+# first align
+plots <- align_plots(tradeoff1, tradeoff12, align = 'v', axis = 'l')
+# then build the bottom row
+top_row <- plot_grid(plots[[1]],tradeoff2, align = 'h', labels=c("A","B"), rel_widths = c(1, 1))
+# then combine with the top row for final plot
+p=plot_grid(top_row,plots[[2]], ncol = 1, labels=c("","C"),rel_heights = c(1, 1.2))
 quartz()
 p
 

@@ -120,16 +120,21 @@ $(document).ready(function () {
 </div>
 
 
-<p><strong>(Zettersten, Wojcik, Benitez, &amp; Saffran (2017)</strong></p>
+<p><strong>Zettersten, Wojcik, Benitez, &amp; Saffran (2017)</strong></p>
 <p>This is a walkthrough of the main analyses reported in the manuscript.</p>
 <p><strong>Setting up the workspace and loading the data</strong></p>
 <p>Load required R packages.</p>
 <pre class="r"><code>#load required R packages
 source(&quot;summarizeData.R&quot;) #script for summarizing data, courtesy of &quot;R cookbook&quot; (http://www.cookbook-r.com/)
-library(utils)
-library(plyr)
-library(lme4)
-library(stats)</code></pre>
+library(utils) #version 3.3.1
+library(plyr) #version 1.8.4
+library(ggplot2) #version 2.2.1
+library(lme4) #version 1.1-14
+library(stats) #version 3.3.1
+library(cowplot) #version 0.8.0
+library(AICcmodavg) #version 2.1-1
+library(reshape2) #version 1.4.2
+library(gtools) #version 3.5.0</code></pre>
 <p>Load in the full experimental dataset.</p>
 <pre class="r"><code>d = read.table(&quot;CrossSit.txt&quot;,sep=&quot;\t&quot;, header=TRUE)</code></pre>
 <div id="experiment-1" class="section level2">
@@ -160,7 +165,7 @@ summary(mLearn_exp1)</code></pre>
 ##  Groups     Name               Variance Std.Dev. Corr
 ##  ResponseID (Intercept)        0.427795 0.65406      
 ##             orderByTargetRoleC 0.018311 0.13532  1.00
-##  targetRole (Intercept)        0.061066 0.24711      
+##  targetRole (Intercept)        0.061066 0.24712      
 ##             orderByTargetRoleC 0.004526 0.06728  0.26
 ## Number of obs: 2448, groups:  ResponseID, 51; targetRole, 8
 ## 
@@ -177,8 +182,8 @@ summary(mLearn_exp1)</code></pre>
 <pre class="r"><code>#compute Wald 95% CIs
 confint(mLearn_exp1,method=&quot;Wald&quot;)[7:8,]</code></pre>
 <pre><code>##                         2.5 %    97.5 %
-## (Intercept)        0.38358904 0.9092406
-## orderByTargetRoleC 0.02579032 0.1825325</code></pre>
+## (Intercept)        0.38358894 0.9092398
+## orderByTargetRoleC 0.02579033 0.1825325</code></pre>
 <p><strong>Object Association Memory</strong></p>
 <pre class="r"><code># object-object association memory model
 mMemory_exp1=glmer(isRight~offset(logit(offset.33))+(1|ResponseID)+(1|pairKind),data=subset(exp1D, trialKind==&quot;test&quot;),family=binomial,control=glmerControl(optimizer=&quot;bobyqa&quot;))
@@ -251,8 +256,8 @@ summary(mTradeoff_exp1)</code></pre>
 ## mmAccExmpTC -0.352</code></pre>
 <pre class="r"><code>confint(mTradeoff_exp1,method=&quot;Wald&quot;)[7:8,]</code></pre>
 <pre><code>##                           2.5 %      97.5 %
-## (Intercept)           0.3377365  0.83717791
-## memAccExemplarTrialC -0.6042902 -0.02352109</code></pre>
+## (Intercept)           0.3377350  0.83717749
+## memAccExemplarTrialC -0.6042878 -0.02352199</code></pre>
 </div>
 <div id="experiment-2" class="section level2">
 <h2>Experiment 2</h2>
@@ -280,15 +285,15 @@ summary(mLearn_exp2)</code></pre>
 ## 
 ## Random effects:
 ##  Groups     Name               Variance  Std.Dev. Corr
-##  ResponseID (Intercept)        0.5761357 0.75904      
-##             orderByTargetRoleC 0.0153778 0.12401  1.00
-##  targetRole (Intercept)        0.0789874 0.28105      
+##  ResponseID (Intercept)        0.5761358 0.75904      
+##             orderByTargetRoleC 0.0153779 0.12401  1.00
+##  targetRole (Intercept)        0.0789867 0.28105      
 ##             orderByTargetRoleC 0.0008126 0.02851  1.00
 ## Number of obs: 2448, groups:  ResponseID, 51; targetRole, 8
 ## 
 ## Fixed effects:
 ##                    Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept)         0.60126    0.15248   3.943 8.04e-05 ***
+## (Intercept)         0.60126    0.15249   3.943 8.05e-05 ***
 ## orderByTargetRoleC  0.18732    0.03343   5.604 2.09e-08 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
@@ -299,8 +304,8 @@ summary(mLearn_exp2)</code></pre>
 <pre class="r"><code>#compute Wald 95% CIs
 confint(mLearn_exp2,method=&quot;Wald&quot;)[7:8,]</code></pre>
 <pre><code>##                        2.5 %    97.5 %
-## (Intercept)        0.3023989 0.9001287
-## orderByTargetRoleC 0.1218088 0.2528382</code></pre>
+## (Intercept)        0.3023912 0.9001296
+## orderByTargetRoleC 0.1218081 0.2528383</code></pre>
 <p><strong>Compare Word Learning Experiment 1 &amp; 2</strong></p>
 <pre class="r"><code>#Compare Experiment 1 &amp; 2
 mLearn_exp12=glmer(isRight~offset(logit(offset.25))+distributionC*orderByTargetRoleC+(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC:distributionC|targetRole),data=subset(d, trialKind==&quot;training&quot;&amp;(expName==&quot;exp1&quot;|expName==&quot;exp2&quot;)),family=binomial,control=glmerControl(optimizer=&quot;bobyqa&quot;))
@@ -326,18 +331,18 @@ summary(mLearn_exp12)</code></pre>
 ## 
 ## Random effects:
 ##  Groups     Name                             Variance  Std.Dev. Corr 
-##  ResponseID (Intercept)                      0.4905730 0.70041       
-##             orderByTargetRoleC               0.0158907 0.12606  1.00 
+##  ResponseID (Intercept)                      0.4905726 0.70041       
+##             orderByTargetRoleC               0.0158906 0.12606  1.00 
 ##  targetRole (Intercept)                      0.0479177 0.21890       
 ##             orderByTargetRoleC:distributionC 0.0009896 0.03146  -1.00
 ## Number of obs: 4896, groups:  ResponseID, 102; targetRole, 8
 ## 
 ## Fixed effects:
 ##                                  Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept)                       0.62594    0.10863   5.762 8.30e-09 ***
-## distributionC                     0.04007    0.15235   0.263   0.7925    
-## orderByTargetRoleC                0.14569    0.02235   6.520 7.05e-11 ***
-## distributionC:orderByTargetRoleC -0.07970    0.04601  -1.732   0.0833 .  
+## (Intercept)                       0.62594    0.10863   5.762 8.31e-09 ***
+## distributionC                     0.04007    0.15236   0.263   0.7925    
+## orderByTargetRoleC                0.14569    0.02235   6.519 7.05e-11 ***
+## distributionC:orderByTargetRoleC -0.07970    0.04602  -1.732   0.0833 .  
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
@@ -348,10 +353,10 @@ summary(mLearn_exp12)</code></pre>
 ## dstrbC:BTRC -0.170  0.497 -0.018</code></pre>
 <pre class="r"><code>confint(mLearn_exp12,method=&quot;Wald&quot;)[7:10,]</code></pre>
 <pre><code>##                                       2.5 %     97.5 %
-## (Intercept)                       0.4130296 0.83884768
-## distributionC                    -0.2585212 0.33866567
-## orderByTargetRoleC                0.1018935 0.18949325
-## distributionC:orderByTargetRoleC -0.1698865 0.01048727</code></pre>
+## (Intercept)                       0.4130261 0.83885229
+## distributionC                    -0.2585367 0.33868485
+## orderByTargetRoleC                0.1018934 0.18949338
+## distributionC:orderByTargetRoleC -0.1698879 0.01048952</code></pre>
 <pre class="r"><code>#note: the model including full by-item random effects structure did not converge, so we fit the model including only the random slope for the interaction, following Barr (2013)</code></pre>
 <p><strong>Object Association Memory Model</strong></p>
 <pre class="r"><code># object-object association memory model
@@ -447,8 +452,8 @@ summary(mTradeoff_exp2)</code></pre>
 ## 
 ## Random effects:
 ##  Groups     Name                 Variance Std.Dev. Corr 
-##  ResponseID (Intercept)          0.562317 0.74988       
-##             memAccExemplarTrialC 0.506071 0.71139  0.45 
+##  ResponseID (Intercept)          0.562318 0.74988       
+##             memAccExemplarTrialC 0.506072 0.71139  0.45 
 ##  targetRole (Intercept)          0.081542 0.28556       
 ##             memAccExemplarTrialC 0.001525 0.03905  -1.00
 ## Number of obs: 2448, groups:  ResponseID, 51; targetRole, 8
@@ -464,54 +469,45 @@ summary(mTradeoff_exp2)</code></pre>
 ##             (Intr)
 ## mmAccExmpTC 0.240</code></pre>
 <pre class="r"><code>confint(mTradeoff_exp2,method=&quot;Wald&quot;)[7:8,]</code></pre>
-<pre><code>##                            2.5 %    97.5 %
-## (Intercept)           0.32893927 0.9342914
-## memAccExemplarTrialC -0.01674073 0.5595993</code></pre>
+<pre><code>##                           2.5 %    97.5 %
+## (Intercept)           0.3289397 0.9342963
+## memAccExemplarTrialC -0.0167398 0.5596011</code></pre>
 <p><strong>Compare Tradeoffs for Experiment 1 and Experiment 2</strong></p>
-<pre class="r"><code>mTradeoff_exp12=glmer(isRight~offset(logit(offset.25))+distributionC*memAccExemplarTrialC+(1+memAccExemplarTrialC|ResponseID)+(1+memAccExemplarTrialC*distributionC|targetRole), data=subset(d, trialKind==&quot;training&quot;&amp;(expName==&quot;exp1&quot;|expName==&quot;exp2&quot;)),family=binomial,control=glmerControl(optimizer=&quot;bobyqa&quot;))
+<pre class="r"><code>mTradeoff_exp12=glmer(isRight~offset(logit(offset.25))+distributionC*memAccExemplarTrialC+(1+memAccExemplarTrialC|ResponseID)+(1+memAccExemplarTrialC:distributionC|targetRole), data=subset(d, trialKind==&quot;training&quot;&amp;(expName==&quot;exp1&quot;|expName==&quot;exp2&quot;)),family=binomial,control=glmerControl(optimizer=&quot;bobyqa&quot;))
 summary(mTradeoff_exp12)</code></pre>
 <pre><code>## Generalized linear mixed model fit by maximum likelihood (Laplace
 ##   Approximation) [glmerMod]
 ##  Family: binomial  ( logit )
 ## Formula: 
 ## isRight ~ offset(logit(offset.25)) + distributionC * memAccExemplarTrialC +  
-##     (1 + memAccExemplarTrialC | ResponseID) + (1 + memAccExemplarTrialC *  
-##     distributionC | targetRole)
+##     (1 + memAccExemplarTrialC | ResponseID) + (1 + memAccExemplarTrialC:distributionC |  
+##     targetRole)
 ##    Data: 
 ## subset(d, trialKind == &quot;training&quot; &amp; (expName == &quot;exp1&quot; | expName ==  
 ##     &quot;exp2&quot;))
 ## Control: glmerControl(optimizer = &quot;bobyqa&quot;)
 ## 
 ##      AIC      BIC   logLik deviance df.resid 
-##   6220.1   6330.6  -3093.1   6186.1     4879 
+##   6214.3   6279.3  -3097.2   6194.3     4886 
 ## 
 ## Scaled residuals: 
 ##     Min      1Q  Median      3Q     Max 
-## -2.5365 -0.7362 -0.5325  0.9452  2.7093 
+## -2.5642 -0.7398 -0.5379  0.9399  2.6153 
 ## 
 ## Random effects:
-##  Groups     Name                               Variance Std.Dev. Corr 
-##  ResponseID (Intercept)                        0.443168 0.66571       
-##             memAccExemplarTrialC               0.498180 0.70582  0.00 
-##  targetRole (Intercept)                        0.052110 0.22828       
-##             memAccExemplarTrialC               0.004179 0.06465  -0.88
-##             distributionC                      0.065851 0.25661  -0.20
-##             memAccExemplarTrialC:distributionC 0.005363 0.07323   0.18
-##             
-##             
-##             
-##             
-##             
-##  -0.29      
-##   0.31 -1.00
+##  Groups     Name                               Variance  Std.Dev. Corr
+##  ResponseID (Intercept)                        0.4441956 0.66648      
+##             memAccExemplarTrialC               0.5145568 0.71733  0.02
+##  targetRole (Intercept)                        0.0554575 0.23549      
+##             memAccExemplarTrialC:distributionC 0.0006628 0.02575  1.00
 ## Number of obs: 4896, groups:  ResponseID, 102; targetRole, 8
 ## 
 ## Fixed effects:
 ##                                    Estimate Std. Error z value Pr(&gt;|z|)
-## (Intercept)                         0.60997    0.10983   5.554  2.8e-08
-## distributionC                      -0.05294    0.17440  -0.304  0.76147
-## memAccExemplarTrialC               -0.02395    0.10264  -0.233  0.81553
-## distributionC:memAccExemplarTrialC -0.64030    0.20126  -3.182  0.00147
+## (Intercept)                         0.61214    0.11176   5.477 4.33e-08
+## distributionC                      -0.05256    0.14907  -0.353   0.7244
+## memAccExemplarTrialC               -0.02697    0.10067  -0.268   0.7888
+## distributionC:memAccExemplarTrialC -0.64591    0.20088  -3.215   0.0013
 ##                                       
 ## (Intercept)                        ***
 ## distributionC                         
@@ -522,15 +518,16 @@ summary(mTradeoff_exp12)</code></pre>
 ## 
 ## Correlation of Fixed Effects:
 ##             (Intr) dstrbC mmAETC
-## distributnC -0.082              
-## mmAccExmpTC -0.084 -0.058       
-## dstrbC:AETC -0.001  0.011 -0.020</code></pre>
-<pre class="r"><code>confint(mTradeoff_exp12,method=&quot;Wald&quot;)[14:17,]</code></pre>
+## distributnC -0.006              
+## mmAccExmpTC  0.070 -0.029       
+## dstrbC:AETC  0.016  0.106 -0.026</code></pre>
+<pre class="r"><code>confint(mTradeoff_exp12,method=&quot;Wald&quot;)[7:10,]</code></pre>
 <pre><code>##                                         2.5 %     97.5 %
-## (Intercept)                         0.3947052  0.8252345
-## distributionC                      -0.3947505  0.2888722
-## memAccExemplarTrialC               -0.2251218  0.1772297
-## distributionC:memAccExemplarTrialC -1.0347576 -0.2458471</code></pre>
+## (Intercept)                         0.3930823  0.8311901
+## distributionC                      -0.3447390  0.2396191
+## memAccExemplarTrialC               -0.2242741  0.1703376
+## distributionC:memAccExemplarTrialC -1.0396409 -0.2521879</code></pre>
+<pre class="r"><code>#note: the model including full by-item random effects structure did not converge, so we fit the model including only the random slope for the interaction, following Barr (2013)</code></pre>
 </div>
 <div id="experiment-3" class="section level2">
 <h2>Experiment 3</h2>
@@ -538,63 +535,55 @@ summary(mTradeoff_exp12)</code></pre>
 <pre class="r"><code>exp3D = subset(d, expName==&quot;exp3_uniform&quot;|expName==&quot;exp3_skewed&quot;)</code></pre>
 <p><strong>Word Learning Model</strong></p>
 <pre class="r"><code>#Word Learning Model
-mLearn_exp3=glmer(isRight~offset(logit(offset.25))+distributionC*orderByTargetRoleC+(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC*distributionC|targetRole),data=subset(exp3D, trialKind==&quot;training&quot;),family=binomial, control=glmerControl(optimizer=&quot;bobyqa&quot;))
+mLearn_exp3=glmer(isRight~offset(logit(offset.25))+distributionC*orderByTargetRoleC+(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC:distributionC|targetRole),data=subset(exp3D, trialKind==&quot;training&quot;),family=binomial, control=glmerControl(optimizer=&quot;bobyqa&quot;))
 summary(mLearn_exp3)</code></pre>
 <pre><code>## Generalized linear mixed model fit by maximum likelihood (Laplace
 ##   Approximation) [glmerMod]
 ##  Family: binomial  ( logit )
 ## Formula: 
 ## isRight ~ offset(logit(offset.25)) + distributionC * orderByTargetRoleC +  
-##     (1 + orderByTargetRoleC | ResponseID) + (1 + orderByTargetRoleC *  
-##     distributionC | targetRole)
+##     (1 + orderByTargetRoleC | ResponseID) + (1 + orderByTargetRoleC:distributionC |  
+##     targetRole)
 ##    Data: subset(exp3D, trialKind == &quot;training&quot;)
 ## Control: glmerControl(optimizer = &quot;bobyqa&quot;)
 ## 
 ##      AIC      BIC   logLik deviance df.resid 
-##   6161.5   6271.7  -3063.7   6127.5     4831 
+##   6170.7   6235.5  -3075.3   6150.7     4838 
 ## 
 ## Scaled residuals: 
 ##     Min      1Q  Median      3Q     Max 
-## -2.5477 -0.7539 -0.5405  0.9581  2.7283 
+## -2.4328 -0.7541 -0.5523  0.9723  2.5450 
 ## 
 ## Random effects:
-##  Groups     Name                             Variance  Std.Dev. Corr 
-##  ResponseID (Intercept)                      0.4251035 0.65200       
-##             orderByTargetRoleC               0.0141519 0.11896  0.84 
-##  targetRole (Intercept)                      0.0485910 0.22043       
-##             orderByTargetRoleC               0.0004885 0.02210  -0.33
-##             distributionC                    0.1453620 0.38126   0.03
-##             orderByTargetRoleC:distributionC 0.0004510 0.02124   0.51
-##             
-##             
-##             
-##             
-##             
-##  -0.62      
-##  -0.54  0.85
+##  Groups     Name                             Variance  Std.Dev. Corr
+##  ResponseID (Intercept)                      0.4151209 0.64430      
+##             orderByTargetRoleC               0.0135996 0.11662  0.85
+##  targetRole (Intercept)                      0.0477499 0.21852      
+##             orderByTargetRoleC:distributionC 0.0001657 0.01287  1.00
 ## Number of obs: 4848, groups:  ResponseID, 101; targetRole, 8
 ## 
 ## Fixed effects:
 ##                                  Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept)                       0.69312    0.10626   6.523 6.89e-11 ***
-## distributionC                     0.02331    0.19742   0.118    0.906    
-## orderByTargetRoleC                0.19932    0.02350   8.481  &lt; 2e-16 ***
-## distributionC:orderByTargetRoleC -0.06656    0.04475  -1.487    0.137    
+## (Intercept)                       0.69683    0.10524   6.622 3.55e-11 ***
+## distributionC                     0.02431    0.14271   0.170    0.865    
+## orderByTargetRoleC                0.19760    0.02194   9.005  &lt; 2e-16 ***
+## distributionC:orderByTargetRoleC -0.06726    0.04393  -1.531    0.126    
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
 ## Correlation of Fixed Effects:
 ##             (Intr) dstrbC orBTRC
-## distributnC  0.018              
-## ordrByTrgRC  0.169 -0.137       
-## dstrbC:BTRC  0.068  0.383 -0.043</code></pre>
+## distributnC  0.003              
+## ordrByTrgRC  0.266  0.007       
+## dstrbC:BTRC  0.081  0.396 -0.015</code></pre>
 <pre class="r"><code>#compute Wald 95% CIs
-confint(mLearn_exp3,method=&quot;Wald&quot;)[14:17,]</code></pre>
+confint(mLearn_exp3,method=&quot;Wald&quot;)[7:10,]</code></pre>
 <pre><code>##                                       2.5 %     97.5 %
-## (Intercept)                       0.4848590 0.90137271
-## distributionC                    -0.3636243 0.41024397
-## orderByTargetRoleC                0.1532561 0.24537752
-## distributionC:orderByTargetRoleC -0.1542714 0.02115174</code></pre>
+## (Intercept)                       0.4905663 0.90308473
+## distributionC                    -0.2553967 0.30401845
+## orderByTargetRoleC                0.1545968 0.24061008
+## distributionC:orderByTargetRoleC -0.1533574 0.01884076</code></pre>
+<pre class="r"><code>#note: the model including full by-item random effects structure did not converge, so we fit the model including only the random slope for the interaction, following Barr (2013)</code></pre>
 <p><strong>Object-Object Association memory model</strong></p>
 <pre class="r"><code># object-object association memory model
 mMemory_exp3=glmer(isRight~offset(logit(offset.33))+distributionC+(1|ResponseID)+(1+distributionC|pairKind),data=subset(exp3D, trialKind==&quot;test&quot;),family=binomial,control=glmerControl(optimizer=&quot;bobyqa&quot;))
@@ -743,8 +732,8 @@ summary(mTradeoff_exp3)</code></pre>
 ##             memAccExemplarTrialC               0.84092  0.9170   0.18 
 ##  targetRole (Intercept)                        0.06641  0.2577        
 ##             distributionC                      0.15293  0.3911   -0.25
-##             memAccExemplarTrialC               0.07512  0.2741    0.17
-##             distributionC:memAccExemplarTrialC 0.18143  0.4259   -0.41
+##             memAccExemplarTrialC               0.07513  0.2741    0.17
+##             distributionC:memAccExemplarTrialC 0.18142  0.4259   -0.41
 ##             
 ##             
 ##             
@@ -756,10 +745,10 @@ summary(mTradeoff_exp3)</code></pre>
 ## 
 ## Fixed effects:
 ##                                     Estimate Std. Error z value Pr(&gt;|z|)
-## (Intercept)                         0.681602   0.117870   5.783 7.35e-09
-## distributionC                       0.006612   0.203771   0.032    0.974
-## memAccExemplarTrialC               -0.049449   0.154122  -0.321    0.748
-## distributionC:memAccExemplarTrialC -0.053101   0.283206  -0.187    0.851
+## (Intercept)                         0.681602   0.117866   5.783 7.35e-09
+## distributionC                       0.006615   0.203774   0.032    0.974
+## memAccExemplarTrialC               -0.049450   0.154127  -0.321    0.748
+## distributionC:memAccExemplarTrialC -0.053102   0.283190  -0.188    0.851
 ##                                       
 ## (Intercept)                        ***
 ## distributionC                         
@@ -775,10 +764,10 @@ summary(mTradeoff_exp3)</code></pre>
 ## dstrbC:AETC -0.200  0.214  0.039</code></pre>
 <pre class="r"><code>confint(mTradeoff_exp3,method=&quot;Wald&quot;)[14:17,]</code></pre>
 <pre><code>##                                         2.5 %    97.5 %
-## (Intercept)                         0.4505812 0.9126237
-## distributionC                      -0.3927725 0.4059963
-## memAccExemplarTrialC               -0.3515221 0.2526240
-## distributionC:memAccExemplarTrialC -0.6081751 0.5019739</code></pre>
+## (Intercept)                         0.4505877 0.9126157
+## distributionC                      -0.3927740 0.4060047
+## memAccExemplarTrialC               -0.3515329 0.2526337
+## distributionC:memAccExemplarTrialC -0.6081445 0.5019407</code></pre>
 </div>
 
 
@@ -804,7 +793,7 @@ $(document).ready(function () {
   (function () {
     var script = document.createElement("script");
     script.type = "text/javascript";
-    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
     document.getElementsByTagName("head")[0].appendChild(script);
   })();
 </script>

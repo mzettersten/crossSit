@@ -9,7 +9,7 @@ source("summarizeData.R") #script for summarizing data, courtesy of "R cookbook"
 library(utils) #version 3.3.1
 library(plyr) #version 1.8.4
 library(ggplot2) #version 2.2.1
-library(lme4) #version 1.1-13
+library(lme4) #version 1.1-14
 library(stats) #version 3.3.1
 library(cowplot) #version 0.8.0
 library(AICcmodavg) #version 2.1-1
@@ -45,7 +45,7 @@ wordLearningOverall_exp1
 mLearn_exp1=glmer(isRight~offset(logit(offset.25))+orderByTargetRoleC+(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC|targetRole),data=subset(exp1D, trialKind=="training"),family=binomial, control=glmerControl(optimizer="bobyqa"))
 summary(mLearn_exp1)
 #compute Wald 95% CIs
-confint(mLearn_exp1,method="Wald")
+confint(mLearn_exp1,method="Wald")[7:8,]
 
 ##analyze object-object association memory##
 
@@ -56,12 +56,12 @@ memoryOverall_exp1
 # object-object association memory model (by-item effect grouped by paired objects)
 mMemory_exp1=glmer(isRight~offset(logit(offset.33))+(1|ResponseID)+(1|pairKind),data=subset(exp1D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mMemory_exp1)
-confint(mMemory_exp1,method="Wald")
+confint(mMemory_exp1,method="Wald")[3,]
 #Check: identical results when fitting the model with by-item effects grouped by individual objects rather than pairs
 # object-object association memory model (by-item effect grouped by individual items)
 mMemory_exp1=glmer(isRight~offset(logit(offset.33))+(1|ResponseID)+(1|exemplar),data=subset(exp1D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mMemory_exp1)
-confint(mMemory_exp1,method="Wald")
+confint(mMemory_exp1,method="Wald")[3,]
 
 #Test moderate vs. high co-occurrence pairs (by-item effect grouped by paired objects)
 #exp1D$cooccurPairTypeC = varRecode(as.character(exp1D$cooccurPairType),c("moderate","high"),c(-0.5,0.5))
@@ -78,7 +78,7 @@ summary(mMemoryPairs_exp1)
 
 mTradeoff_exp1=glmer(isRight~offset(logit(offset.25))+memAccExemplarTrialC+(1+memAccExemplarTrialC|ResponseID)+(1+memAccExemplarTrialC|targetRole), data=subset(exp1D,trialKind=="training"),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mTradeoff_exp1)
-confint(mTradeoff_exp1,method="Wald")
+confint(mTradeoff_exp1,method="Wald")[7:8,]
 
 #####EXPERIMENT 2#####
 
@@ -105,12 +105,12 @@ wordLearningOverall_exp2
 mLearn_exp2=glmer(isRight~offset(logit(offset.25))+orderByTargetRoleC+(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC|targetRole),data=subset(exp2D, trialKind=="training"),family=binomial, control=glmerControl(optimizer="bobyqa"))
 summary(mLearn_exp2)
 #compute Wald 95% CIs
-confint(mLearn_exp2,method="Wald")
+confint(mLearn_exp2,method="Wald")[7:8,]
 
 #Compare Experiment 1 & 2
 mLearn_exp12=glmer(isRight~offset(logit(offset.25))+distributionC*orderByTargetRoleC+(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC:distributionC|targetRole),data=subset(d, trialKind=="training"&(expName=="exp1"|expName=="exp2")),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mLearn_exp12)
-confint(mLearn_exp12,method="Wald")
+confint(mLearn_exp12,method="Wald")[7:10,]
 #note: the model including full by-item random effects structure did not converge, so we fit the model including only the random slope for the interaction, following Barr (2013)
 
 ##analyze object-object association memory##
@@ -121,32 +121,34 @@ memoryOverall_exp2
 # object-object association memory model
 mMemory_exp2=glmer(isRight~offset(logit(offset.33))+(1|ResponseID)+(1|pairKind),data=subset(exp2D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mMemory_exp2)
-confint(mMemory_exp2,method="Wald")
+confint(mMemory_exp2,method="Wald")[3,]
 #Compare Experiment 1 & 2
 mMemory_exp12=glmer(isRight~offset(logit(offset.33))+distributionC+(1|ResponseID)+(1+distributionC|pairKind),data=subset(d, trialKind=="test"&(expName=="exp1"|expName=="exp2")),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mMemory_exp12)
-confint(mMemory_exp12,method="Wald")
+confint(mMemory_exp12,method="Wald")[5:6,]
 
 #Check: similar results when fitting the model with by-item effects grouped by individual objects rather than pairs
 # object-object association memory model
 mMemory_exp2=glmer(isRight~offset(logit(offset.33))+(1|ResponseID)+(1|exemplar),data=subset(exp2D, trialKind=="test"),family=binomial,glmerControl(optimizer="bobyqa"))
 summary(mMemory_exp2)
-confint(mMemory_exp2,method="Wald")
+confint(mMemory_exp2,method="Wald")[3,]
 #Compare Experiment 1 & 2
 mMemory_exp12=glmer(isRight~offset(logit(offset.33))+distributionC+(1|ResponseID)+(1+distributionC|exemplar),data=subset(d, trialKind=="test"&(expName=="exp1"|expName=="exp2")),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mMemory_exp12) #p - value marginal, p = .0543
-confint(mMemory_exp12,method="Wald")
+confint(mMemory_exp12,method="Wald")[5:6,]
 
 ##analyze object-object memory vs. word learning tradeoff##
 #Experiment 2 alone
 mTradeoff_exp2=glmer(isRight~offset(logit(offset.25))+memAccExemplarTrialC+(1+memAccExemplarTrialC|ResponseID)+(1+memAccExemplarTrialC|targetRole), data=subset(exp2D,trialKind=="training"),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mTradeoff_exp2)
-confint(mTradeoff_exp2,method="Wald")
+confint(mTradeoff_exp2,method="Wald")[7:8,]
 
 #compare Exp 1 & Exp 2
-mTradeoff_exp12=glmer(isRight~offset(logit(offset.25))+distributionC*memAccExemplarTrialC+(1+memAccExemplarTrialC|ResponseID)+(1+memAccExemplarTrialC*distributionC|targetRole), data=subset(d, trialKind=="training"&(expName=="exp1"|expName=="exp2")),family=binomial,control=glmerControl(optimizer="bobyqa"))
+mTradeoff_exp12=glmer(isRight~offset(logit(offset.25))+distributionC*memAccExemplarTrialC+(1+memAccExemplarTrialC|ResponseID)+(1+memAccExemplarTrialC:distributionC|targetRole), data=subset(d, trialKind=="training"&(expName=="exp1"|expName=="exp2")),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mTradeoff_exp12)
-confint(mTradeoff_exp12,method="Wald")
+confint(mTradeoff_exp12,method="Wald")[7:10,]
+##note: the model including full by-item random effects structure did not converge, so we fit the model including only the random slope for the interaction, following Barr (2013)
+
 
 #####EXPERIMENT 3#####
 
@@ -173,10 +175,11 @@ wordLearningOverall_exp3
 wordLearningCond_exp3
 
 #Word Learning Model
-mLearn_exp3=glmer(isRight~offset(logit(offset.25))+distributionC*orderByTargetRoleC+(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC*distributionC|targetRole),data=subset(exp3D, trialKind=="training"),family=binomial, control=glmerControl(optimizer="bobyqa"))
+mLearn_exp3=glmer(isRight~offset(logit(offset.25))+distributionC*orderByTargetRoleC+(1+orderByTargetRoleC|ResponseID)+(1+orderByTargetRoleC:distributionC|targetRole),data=subset(exp3D, trialKind=="training"),family=binomial, control=glmerControl(optimizer="bobyqa"))
+##note: maximal random effects structure did not converge, so we follow Barr et al. (2013) in retaining the highest-order ranomd effect term
 summary(mLearn_exp3)
 #compute Wald 95% CIs
-confint(mLearn_exp3,method="Wald")[14:17,]
+confint(mLearn_exp3,method="Wald")[7:10,]
 
 
 ##analyze object-object association memory##
@@ -190,49 +193,49 @@ memoryCond_exp3
 # object-object association memory model
 mMemory_exp3=glmer(isRight~offset(logit(offset.33))+distributionC+(1|ResponseID)+(1+distributionC|pairKind),data=subset(exp3D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mMemory_exp3)
-confint(mMemory_exp3,method="Wald")
+confint(mMemory_exp3,method="Wald")[5:6,]
 
 #recode to test skewed condition against chance
 exp3D$distributionSkewed = ifelse(exp3D$distributionC==-0.5,-1,
                                   ifelse(exp3D$distributionC==0.5,0,NA))
 mMemory_exp3Skewed=glmer(isRight~offset(logit(offset.33))+distributionSkewed+(1|ResponseID)+(1+distributionSkewed|pairKind),data=subset(exp3D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mMemory_exp3Skewed)
-confint(mMemory_exp3Skewed,method="Wald")
+confint(mMemory_exp3Skewed,method="Wald")[5:6,]
 #recode to test uniform condition against chance
 exp3D$distributionUniform = ifelse(exp3D$distributionC==-0.5,0,
                                    ifelse(exp3D$distributionC==0.5,1,NA))
 mMemory_exp3Uniform=glmer(isRight~offset(logit(offset.33))+distributionUniform+(1|ResponseID)+(1+distributionUniform|pairKind),data=subset(exp3D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mMemory_exp3Uniform)
-confint(mMemory_exp3Uniform,method="Wald")
+confint(mMemory_exp3Uniform,method="Wald")[5:6,]
 
 #Check: identical results when fitting the model with by-item effects grouped by individual objects rather than pairs
 mMemory_exp3=glmer(isRight~offset(logit(offset.33))+distributionC+(1|ResponseID)+(1+distributionC|exemplar),data=subset(exp3D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mMemory_exp3)
-confint(mMemory_exp3,method="Wald")
+confint(mMemory_exp3,method="Wald")[5:6,]
 
 #test skewed condition against chance
 ##model with full random effects-structure does not converge, so we remove the by-item random slope to allow the model to converge
 #mMemory_exp3Skewed=glmer(isRight~offset(logit(offset.33))+distributionSkewed+(1|ResponseID)+(1+distributionSkewed|exemplar),data=subset(exp3D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
 mMemory_exp3Skewed=glmer(isRight~offset(logit(offset.33))+distributionSkewed+(1|ResponseID)+(1|exemplar),data=subset(exp3D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mMemory_exp3Skewed)
-confint(mMemory_exp3Skewed,method="Wald")
+confint(mMemory_exp3Skewed,method="Wald")[3:4,]
 #test uniform condition against chance
 mMemory_exp3Uniform=glmer(isRight~offset(logit(offset.33))+distributionUniform+(1|ResponseID)+(1+distributionUniform|exemplar),data=subset(exp3D, trialKind=="test"),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mMemory_exp3Uniform)
-confint(mMemory_exp3Uniform,method="Wald")
+confint(mMemory_exp3Uniform,method="Wald")[5:6,]
 
 ##analyze object-object memory vs. word learning tradeoff##
 mTradeoff_exp3=glmer(isRight~offset(logit(offset.25))+distributionC*memAccExemplarTrialC+(1+memAccExemplarTrialC|ResponseID)+(1+distributionC*memAccExemplarTrialC|targetRole), data=subset(exp3D,trialKind=="training"),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mTradeoff_exp3)
-confint(mTradeoff_exp3,method="Wald")
+confint(mTradeoff_exp3,method="Wald")[14:17,]
 #test skewed condition
 mTradeoff_exp3Skewed=glmer(isRight~offset(logit(offset.25))+distributionSkewed*memAccExemplarTrialC+(1+memAccExemplarTrialC|ResponseID)+(1+distributionSkewed*memAccExemplarTrialC|targetRole), data=subset(exp3D, trialKind=="training"),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mTradeoff_exp3Skewed)
-confint(mTradeoff_exp3Skewed,method="Wald")
+confint(mTradeoff_exp3Skewed,method="Wald")[14:17,]
 #test skewed condition
 mTradeoff_exp3Uniform=glmer(isRight~offset(logit(offset.25))+distributionUniform*memAccExemplarTrialC+(1+memAccExemplarTrialC|ResponseID)+(1+distributionC*memAccExemplarTrialC|targetRole), data=subset(exp3D, trialKind=="training"),family=binomial,control=glmerControl(optimizer="bobyqa"))
 summary(mTradeoff_exp3Uniform)
-confint(mTradeoff_exp3Uniform,method="Wald")
+confint(mTradeoff_exp3Uniform,method="Wald")[14:17,]
 
 
 #####Plots#####
@@ -306,8 +309,8 @@ pLearn2=pLearn2+geom_line(position=pd, size=2)+
   annotate("text", label = "Chance performance", x = 5, y = 0.27, size = 5, color = "black")
 
 #plot graphs together
-#quartz(width=10,height=6) #only use with Mac
 Learn_123 =  plot_grid(pLearn1,pLearn2, labels = c("A", "B"), label_size = 26, align = "h")
+#quartz(width=10,height=6) #only use with Mac
 Learn_123
 
 ###Memory Exp 1, 2, & 3###
@@ -390,8 +393,8 @@ pMem2=ggplot(data = subset(memory, expName=="exp3_skewed"|expName=="exp3_uniform
 
 #Memory for Experiments 1, 2, & 3
 #with cowplot
-#quartz(width=11,height=6) #only use with Mac
 Mem_123 =  plot_grid(pMem1,pMem2, labels = c("A", "B"), label_size = 26, align = "h")
+#quartz(width=11,height=6) #only use with Mac
 Mem_123
 
 ####Learning Memory Tradeoff Exp 1,2,3####
@@ -486,9 +489,9 @@ pMemLearn2=ggplot(data = pX, aes(x=expNameF,y = fit2, fill=expNameF,alpha=as.fac
   labs(y="")
 
 #Memory Tradeoffs for Experiments 1,2,3
+MemLearn_123 =  plot_grid(pMemLearn1,pMemLearn2, labels = c("A", "B"), label_size = 26, align = "h")
 #with cowplot
 quartz(width=11,height=6) #only use with Mac
-MemLearn_123 =  plot_grid(pMemLearn1,pMemLearn2, labels = c("A", "B"), label_size = 26, align = "h")
 MemLearn_123
 
 #Figure 2: Distributions
