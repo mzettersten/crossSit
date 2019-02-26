@@ -13,7 +13,9 @@ The folder data contains the following documents
 - **CrossSit_codebook.docx**: A codebook for the dataset "CrossSit.txt"
 - **summarizeData.R**: An R script including help functions to summarize data
 
-## Analysis Walkthrough R Markdown file
+## Analysis Walkthrough
+
+Here is a direct link to the html output of the R Markdown file in the data folder. This provides a walkthrough of the major analyses in the paper.
 
 http://htmlpreview.github.io/?https://github.com/mzettersten/crossSit/blob/master/data/CrossSit_analyses.html
 
