@@ -13,6 +13,10 @@ The folder data contains the following documents
 - **CrossSit_codebook.docx**: A codebook for the dataset "CrossSit.txt"
 - **summarizeData.R**: An R script including help functions to summarize data
 
+## Analysis Walkthrough R Markdown file
+
+http://htmlpreview.github.io/?https://github.com/mzettersten/crossSit/blob/master/data/CrossSit_analyses.html
+
 ## Questions
 
 Feel free to contact me at **zettersten@wisc.edu** if you have any comments or questions about the data or the analyses.
