@@ -1,5 +1,6 @@
 # crossSit
-Data &amp; Materials from cross-situational word learning study "The company objects keep:  Linking referents together during cross-situational word learning" (Zettersten, Wojcik, Benitez, &amp; Saffran)
+Data &amp; Materials from cross-situational word learning study "The company objects keep:  Linking referents together during cross-situational word learning" (Zettersten, Wojcik, Benitez, &amp; Saffran, 2018).
+https://doi.org/10.1016/j.jml.2017.11.001
 
 ## Data
 
